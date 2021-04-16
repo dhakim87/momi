@@ -50,6 +50,24 @@ https://biocore.github.io/wol/data/taxonomy/ncbi/metadata.tsv.bz2
 
 	3.2 - Download proteomes (This takes minutes/days/weeks/months depending on how many proteomes you want to download and how entrez direct is feeling.  It will also silently fail at the entrez direct layer on random proteomes.)
 
-		python download_proteomes.py
+		python download_proteome.py
 
-		
+	3.3 - Validate your downloads
+		If you run:
+		python download_proteome.py
+		and everything is already downloaded correctly, it will report that it can skip all downloads and run reasonably quickly  
+
+		Don't count on it- Entrez will likely be unable to completely download a number of the proteomes permanently, so you may have to mess with the rules in download_proteome.py to bypass certain failing downloads.  
+
+		You can get a better understanding of what has been downloaded with:
+		python validate.py
+
+4.  Process proteome data with NetMHCIIPan (This takes a LONG TIME!)
+
+	Note:  Processing scripts are designed for parallel use.  They parallelize work by assigning fasta files to different processes.  This is done by use of a JOB_INDEX and NUM_JOBS that is passed on the command line to each python script.  If you want to run a script in a single process, use a JOB_INDEX of 0, and a NUM_JOBS of 1.  If you want to parallelize a script, instead start X processes, using JOB_INDEX of 0,1,2,3,...,X-1, and NUM_JOBS of X.  The .sh wrapper files follow this procedure to parallelize jobs on the cluster, but may need to be modified for your cluster architecture and queuing mechanisms.  
+
+	Serial Usage:
+
+	```# python <scriptname> <jobindex> <numjobs> <path_to_netMHCIIpan executable> ```
+	python run_netmhciipan.py 0 1 "/Users/djhakim/netMHCIIpan/netMHCIIpan-4.0/netMHCIIpan"
+

@@ -7,9 +7,15 @@ import xml.etree.ElementTree as ET
 print("Script:", sys.argv[0])
 print("Job Index:", sys.argv[1])
 print("Num Jobs:", sys.argv[2])
+print("NetMHCIIPan Location:", sys.argv[3])
 
 JOB_INDEX = sys.argv[1]
 NUM_JOBS = sys.argv[2]
+NETMHCIIPAN = sys.argv[3]
+
+if not os.path.exists(NETMHCIIPAN):
+    print("Could not find NetMHCIIpan executable")
+    exit(-1)
 
 def parse_qinfo(ncbi_id):
     tree = ET.parse("proteomes/" + str(ncbi_id) + ".qinfo")
@@ -58,7 +64,7 @@ for i in range(int(JOB_INDEX), len(ncbi_ids), int(NUM_JOBS)):
         print("Skipping " + str(ncbi_id) + " Less than 95% of proteins downloaded")
         continue
 
-    cmd = subprocess.run("/home/djhakim/netMHCIIpan/netMHCIIpan-4.0/netMHCIIpan -filter -a DRB1_1501 -f ./proteomes/" + str(ncbi_id) + ".fasta > ./netmhc/" + str(ncbi_id) + ".mhc 2> ./netmhc/" + str(ncbi_id) + ".err",
+    cmd = subprocess.run(NETMHCIIPAN + " -filter -a DRB1_1501 -f ./proteomes/" + str(ncbi_id) + ".fasta > ./netmhc/" + str(ncbi_id) + ".mhc 2> ./netmhc/" + str(ncbi_id) + ".err",
                            shell=True)
     cmd = subprocess.run("touch ./netmhc/" + str(ncbi_id) + ".fin", shell=True)
 

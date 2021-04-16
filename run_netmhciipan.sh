@@ -16,6 +16,6 @@
 # -t 1-32%16
 
 source activate imsms
-
-python run_netmhciipan.py ${PBS_ARRAYID} 1000
+NETMHCPATH = "/home/djhakim/netMHCIIpan/netMHCIIpan-4.0/netMHCIIpan"
+python run_netmhciipan.py ${PBS_ARRAYID} 1000 $NETMHCPATH
 
