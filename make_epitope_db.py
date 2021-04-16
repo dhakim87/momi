@@ -19,7 +19,7 @@ def make_tables():
     c.execute("CREATE TABLE genome (genome_id text, ncbi_id text, genus text, species text)")
     c.execute("CREATE INDEX genome_idx ON genome(genome_id, genus, species)")
     c.execute("CREATE INDEX genome_ncbi ON genome(ncbi_id, genus, species)")
-    c.execute("CREATE TABLE status (ncbi_id text, file_status, text, processing_status text)")
+    c.execute("CREATE TABLE status (ncbi_id text, file_status text, processing_status text)")
 
 def parse_qinfo(ncbi_id):
     tree = ET.parse("proteomes/" + ncbi_id + ".qinfo")
@@ -131,13 +131,13 @@ def set_status():
             file_status = "wtf" # Garbage tools downloaded extra proteins...
 
         processing_status = []
-        if path.exists("./netmhc/" + ncbi_id + ".mhc"):
+        if path.exists("./netmhc/" + ncbi_id + ".fin"):
             processing_status.append("mhc")
-        if path.exists("./netmhc/" + ncbi_id + ".mbp"):
+        if path.exists("./netmhc/" + ncbi_id + ".mbp-scored"):
             processing_status.append("mbp")
-        if path.exists("./netmhc/" + ncbi_id + ".mog"):
+        if path.exists("./netmhc/" + ncbi_id + ".mog-scored"):
             processing_status.append("mog")
-        if path.exists("./netmhc/" + ncbi_id + ".plp1"):
+        if path.exists("./netmhc/" + ncbi_id + ".plp1-scored"):
             processing_status.append("plp1")
 
         c.execute("INSERT INTO status(ncbi_id, file_status, processing_status) VALUES(?,?,?)",(ncbi_id, file_status, "|".join(processing_status)))

@@ -28,9 +28,6 @@ https://biocore.github.io/wol/data/taxonomy/ncbi/
 You can retrieve the taxids file, rename it, and add the column headers
 https://biocore.github.io/wol/data/taxonomy/ncbi/taxids.txt
 
-If you want full info about each genome id, you can also grab the woltka metadata:
-https://biocore.github.io/wol/data/taxonomy/ncbi/metadata.tsv.bz2
-
 3.  Download proteome data
 
 	3.0 - Required for large downloads: 
@@ -102,4 +99,62 @@ https://biocore.github.io/wol/data/taxonomy/ncbi/metadata.tsv.bz2
 		XXX.parseErr contains any error messages (almost always empty)
 		XXX.done indicates that the file was parsed.  If no .done exists, the script is still running or failed/was interrupted.  You should check if jobs are still queued or if XXX.parseErr has error messages in this case.  
 
-6.  
+6.  Score mimics by similarity to chosen myelin related protein
+
+	Serial usage: Any or all of:
+
+	python run_scoring.py 0 1 MBP
+	python run_scoring.py 0 1 MOG
+	python run_scoring.py 0 1 PLP1
+
+	Parallel usage: 
+	Change myelin related peptide in run_scoring.sh (pick any of MBP, MOG, PLP1)
+	qsub run_scoring.sh
+
+	This will score all of the strong binders from the .core files and create two new files:
+		./netmhc/XXX.mbp
+		./netmhc/XXX.mbp-scored
+		or
+		./netmhc/XXX.mog
+		./netmhc/XXX.mog-scored
+		or
+		./netmhc/XXX.plp1
+		./netmhc/XXX.plp1-scored
+
+		XXX.mbp contains the blosum62 score and core epitopes from best match to worst match. 
+		XXX.mbp-scored indicates that processing was successful.  Absence of this file indicates processing failed or is still in progress.  
+
+	NOTE: To add scoring for new proteins, you must modify both run_scoring.py and score_cores.py to include epitopes for the new proteins
+
+7.  Build mimic database
+
+	7.1 Filling in the database requires additional metadata about each genome.  You can download the woltka metadata here:
+		https://biocore.github.io/wol/data/taxonomy/ncbi/metadata.tsv.bz2
+		(if link broken, check this page: https://biocore.github.io/wol/data/taxonomy/ncbi/)
+
+		Unzip and rename the downloaded tsv file to wol_metadata.tsv
+
+	7.2 Build the database
+	
+		```python make_epitope_db.py <similarity_threshold>```
+
+		This will build ./mimics.db sqlite database containing information about all the mimics.  You need to pick a similarity threshold, this is the threshold for least similar blosum62 score that will be included in the database.  25 is a good cutoff, -99999 will keep every single epitope, of which there are millions, nearly all of which are probably useless for most purposes
+
+Congratulations, you can now search all possible mimics in the microbiome.
+
+You can use your favorite sqlite tools to browse the data in the database, some free ones are:
+	DB Browser 
+	SqliteSpy
+
+mimics.db has three tables:
+	genome
+	mimic
+	status
+
+Table genome maps woltka genome_id to ncbi_id, and records genus and species according to the woltka metadata for your convenience.  
+
+Table status summarizes current processing status.  
+For every ncbi id in table genome, you can check whether or not the proteome was fully downloaded in file_status, and which, if any, of the myelin related proteins this ncbi_id was scored for in processing_status.  
+
+If file_status is not set to "valid", then something went wrong in step 3, and the .fasta file doesn't match the .qinfo.  
+If processing_status is not set to "mhc|mbp|mog|plp1", then one or more steps of the processing have failed.
