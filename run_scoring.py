@@ -29,19 +29,20 @@ for i in range(int(JOB_INDEX), len(ncbi_ids), int(NUM_JOBS)):
         print("Skipping " + str(ncbi_id) + " (No .done)")
         continue
 
-    if os.path.exists("./netmhc/" + str(ncbi_id) + ".scored"):
-        print("Skipping " + str(ncbi_id) + " (Existence of .scored says it's already scored)")
-        continue
-
     if sys.argv[3] == "MBP":
         ending = ".mbp"
-    if sys.argv[3] == "MOG":
+    elif sys.argv[3] == "MOG":
         ending = ".mog"
-    if sys.argv[3] == "PLP1":
+    elif sys.argv[3] == "PLP1":
         ending = ".plp1"
+    else:
+        raise Exception("Unknown Protein: " + sys.argv[3])
+
+    if os.path.exists("./netmhc/" + str(ncbi_id) + ending + "-scored"):
+        print("Skipping " + str(ncbi_id) + " (Existence of .scored says it's already scored)")
+        continue
 
     #TODO: Decide between multiple sorted scoring files (.mbp, .mog, .plp) and some combined file or combined score
     cmd = subprocess.run('cat ./netmhc/' + str(ncbi_id) + '.core | python score_cores.py ' + sys.argv[3] + ' > ./netmhc/' + str(ncbi_id) + ending,
                          shell=True)
-    cmd = subprocess.run("touch ./netmhc/" + str(ncbi_id) + ".scored", shell=True)
-
+    cmd = subprocess.run("touch ./netmhc/" + str(ncbi_id) + ending + "-scored", shell=True)
