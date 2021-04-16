@@ -44,6 +44,10 @@ for ncbi_id in taxids["ncbi_id"]:
     #     print("Skipping " + str(ncbi_id) + " We already got more than half.  Uugghh")
     #     continue
 
+    if received == count:
+        print("Skip " + str(ncbi_id) + " File already downloaded")
+        continue
+
     if received == 0:
         print("Retrying " + str(ncbi_id) + " (Which failed instantly in the past)")
 
