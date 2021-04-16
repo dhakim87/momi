@@ -68,7 +68,7 @@ Don't count on it- Entrez will likely be unable to completely download a number 
 
 You can get a better understanding of what has been downloaded with:
 
-	python validate.py
+	python validate_downloaded_proteomes.py
 
 4.  Process proteome data with NetMHCIIPan (This takes a LONG TIME!)
 ----------------------------------
