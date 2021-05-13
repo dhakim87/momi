@@ -17,5 +17,7 @@
 
 source activate imsms
 
+python run_scoring.py ${PBS_ARRAYID} 1000 MBP
+python run_scoring.py ${PBS_ARRAYID} 1000 MOG
 python run_scoring.py ${PBS_ARRAYID} 1000 PLP1
 
