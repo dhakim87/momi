@@ -91,6 +91,7 @@ if len(sys.argv) >= 3 and sys.argv[2] == "DEBUG":
     for core in ALL_CORES:
         print(core)
         print(aligned_score([core], core))
+    exit(-1)
 
 if sys.argv[1] == "MBP":
     CORE_EPITOPES = MBP_CORES_STRONG + MBP_CORES_WEAK
