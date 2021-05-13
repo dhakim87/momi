@@ -46,23 +46,60 @@ def aligned_score(core_epitopes, putative_mimic):
     return max_sum, core_epitopes[sum_index]
 
 
-MBP_CORES = ["VHFFKNIVT"]
-MOG_CORES = ["IRALVGDEV", "VHLYRNGKD"]
-PLP1_CORES = ["IETYFSKNY", "VLPWNAFPG", "IAAFVGAAA"]
+# Strong and weak cores predicted by NetMHCIIpan v4.0
+MBP_CORES_STRONG = [
+    "VHFFKNIVT"
+]
+MBP_CORES_WEAK = [
+    "LIRLFSRDA",
+    "LDVMASQKR",
+    "IGRFFGGDR",
+    "TAHYGSLPQ",
+    "FKNIVTPRT",
+    "IFKLGGRDS"
+]
+MOG_CORES_STRONG = [
+    "IRALVGDEV",
+    "VHLYRNGKD"
+]
+MOG_CORES_WEAK = [
+    "VGWYRPPFS",
+    "IVPVLGPLV"
+]
+PLP1_CORES_STRONG = [
+    "IETYFSKNY",
+    "VLPWNAFPG",
+    "IAAFVGAAA"
+]
+PLP1_CORES_WEAK = [
+    "INVIHAFQY",
+    "YVIYGTASF",
+    "FFLYGALLL",
+    "LLLAEGFYT",
+    "FGDYKTTIC",
+    "VYIYFNTWT",
+    "YIYFNTWTT",
+    "WNAFPGKVC",
+    "FHLFIAAFV",
+    "IAATYNFAV"
+]
 
 if len(sys.argv) >= 3 and sys.argv[2] == "DEBUG":
-    for core in MBP_CORES + MOG_CORES + PLP1_CORES:
+    ALL_CORES = MBP_CORES_STRONG + MBP_CORES_WEAK + \
+                MOG_CORES_STRONG + MOG_CORES_WEAK + \
+                PLP1_CORES_STRONG + PLP1_CORES_WEAK
+    for core in ALL_CORES:
         print(core)
-        print(aligned_score([core],core))
+        print(aligned_score([core], core))
 
 if sys.argv[1] == "MBP":
-    CORE_EPITOPES = MBP_CORES
+    CORE_EPITOPES = MBP_CORES_STRONG + MBP_CORES_WEAK
     SCORE_NAME = "MBP_SCORE"
 elif sys.argv[1] == "MOG":
-    CORE_EPITOPES = MOG_CORES
+    CORE_EPITOPES = MOG_CORES_STRONG + MOG_CORES_WEAK
     SCORE_NAME = "MOG_SCORE"
 elif sys.argv[1] == "PLP1":
-    CORE_EPITOPES = PLP1_CORES
+    CORE_EPITOPES = PLP1_CORES_STRONG + PLP1_CORES_WEAK
     SCORE_NAME = "PLP1_SCORE"
 else:
     print("Unknown target protein:", sys.argv[1])
