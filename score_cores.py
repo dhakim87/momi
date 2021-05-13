@@ -1,5 +1,6 @@
 import sys
 
+
 def readBlosum62():
     dict = {}
     with open("blosum62.txt") as f:
@@ -18,10 +19,10 @@ def readBlosum62():
 
 BLOSUM62 = readBlosum62()
 
-def print_all(mimics):
-    for mimic in mimics:
-        row = str(mimic[0]) + "," + mimic[1]
-        print(row)
+
+def print_all(rows):
+    for row in rows:
+        print(", ".join([str(r) for r in row]))
 
 
 def aligned_score(core_epitopes, putative_mimic):
@@ -38,7 +39,12 @@ def aligned_score(core_epitopes, putative_mimic):
                 # print("Unknown Amino Acid Match: ", key)
                 sum -= 10
         sums.append(sum)
-    return max(sums)
+
+    max_sum = max(sums)
+    sum_index = sums.index(max_sum)
+
+    return max_sum, core_epitopes[sum_index]
+
 
 MBP_CORES = ["VHFFKNIVT"]
 MOG_CORES = ["IRALVGDEV", "VHLYRNGKD"]
@@ -52,22 +58,28 @@ if len(sys.argv) >= 3 and sys.argv[2] == "DEBUG":
 if sys.argv[1] == "MBP":
     CORE_EPITOPES = MBP_CORES
     SCORE_NAME = "MBP_SCORE"
-if sys.argv[1] == "MOG":
+elif sys.argv[1] == "MOG":
     CORE_EPITOPES = MOG_CORES
     SCORE_NAME = "MOG_SCORE"
-if sys.argv[1] == "PLP1":
+elif sys.argv[1] == "PLP1":
     CORE_EPITOPES = PLP1_CORES
     SCORE_NAME = "PLP1_SCORE"
+else:
+    print("Unknown target protein:", sys.argv[1])
+    raise Exception("Unknown target protein: " + sys.argv[1])
 
-
-cores = set([])
+putative_mimics = set([])
 for line in sys.stdin:
-    core = line.strip()
-    cores.add(core)
+    putative_mimic = line.strip()
+    putative_mimics.add(putative_mimic)
 
-mimics = [(aligned_score(CORE_EPITOPES, mimic), mimic) for mimic in cores if len(mimic) == len(CORE_EPITOPES[0])]
-mimics = sorted(mimics, key=lambda mimic: mimic[0], reverse=True)
+output_rows = []
+for mimic in putative_mimics:
+    if len(mimic) != len(CORE_EPITOPES[0]):
+        continue
+    score, core_epitope = aligned_score(CORE_EPITOPES, mimic)
+    output_rows.append((score, mimic, core_epitope))
+output_rows.sort(key=lambda row: row[0], reverse=True)
 
-print(SCORE_NAME + ", CORE")
-print_all(mimics)
-
+print(SCORE_NAME + ", MIMIC, EPITOPE")
+print_all(output_rows)

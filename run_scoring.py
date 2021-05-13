@@ -42,7 +42,6 @@ for i in range(int(JOB_INDEX), len(ncbi_ids), int(NUM_JOBS)):
         print("Skipping " + str(ncbi_id) + " (Existence of .scored says it's already scored)")
         continue
 
-    #TODO: Decide between multiple sorted scoring files (.mbp, .mog, .plp) and some combined file or combined score
     cmd = subprocess.run('cat ./netmhc/' + str(ncbi_id) + '.core | python score_cores.py ' + sys.argv[3] + ' > ./netmhc/' + str(ncbi_id) + ending,
                          shell=True)
     cmd = subprocess.run("touch ./netmhc/" + str(ncbi_id) + ending + "-scored", shell=True)

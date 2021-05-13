@@ -13,7 +13,7 @@ conn = sqlite3.connect("mimics.db")
 c = conn.cursor()
 
 def make_tables():
-    c.execute("CREATE TABLE mimic (ncbi_id text, genome_id text, epitope text, mimicked text, blosum real)")
+    c.execute("CREATE TABLE mimic (ncbi_id text, genome_id text, epitope text, mimicked text, mimicked_epitope text, blosum real)")
     c.execute("CREATE INDEX mimic_any ON mimic(blosum, epitope)")
     c.execute("CREATE INDEX mimic_ncbi ON mimic(ncbi_id, genome_id, blosum)")
     c.execute("CREATE TABLE genome (genome_id text, ncbi_id text, genus text, species text)")
@@ -81,8 +81,10 @@ def set_mimics():
                 ss = line.split(",")
                 score = int(ss[0].strip())
                 mimic = ss[1].strip()
+                epitope = ss[2].strip()
+
                 if score >= MIN_SCORE:
-                    putative_mimics.append((mimic, score))
+                    putative_mimics.append((mimic, score, epitope))
                 else:
                     break;
                 line = f.readline()
@@ -90,7 +92,7 @@ def set_mimics():
         putative_mimics = sorted(putative_mimics)
         for genome_id in ncbi_to_genome[ncbi_id]:
             for tuple in putative_mimics:
-                c.execute("INSERT INTO mimic VALUES(?,?,?,?,?)", (ncbi_id, genome_id, tuple[0], mimicked, tuple[1]))
+                c.execute("INSERT INTO mimic VALUES(?,?,?,?,?,?)", (ncbi_id, genome_id, tuple[0], mimicked, tuple[2], tuple[1]))
 
 def set_genome():
     with open("./wol_metadata.tsv") as wol_meta:
