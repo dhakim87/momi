@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 print("Script:", sys.argv[0])
 print("Job Index:", sys.argv[1])
 print("Num Jobs:", sys.argv[2])
-print("Core Set (MBP/MOG/PLP1):", sys.argv[3]) 
+print("Core Set (MBP/MOG/PLP1/RASGRP2):", sys.argv[3])
 
 JOB_INDEX = sys.argv[1]
 NUM_JOBS = sys.argv[2]
@@ -35,6 +35,8 @@ for i in range(int(JOB_INDEX), len(ncbi_ids), int(NUM_JOBS)):
         ending = ".mog"
     elif sys.argv[3] == "PLP1":
         ending = ".plp1"
+    elif sys.argv[3] == "RASGRP2":
+        ending = ".rasgrp2"
     else:
         raise Exception("Unknown Protein: " + sys.argv[3])
 

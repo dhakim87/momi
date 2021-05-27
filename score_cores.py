@@ -83,6 +83,36 @@ PLP1_CORES_WEAK = [
     "FHLFIAAFV",
     "IAATYNFAV"
 ]
+RASGRP2_CORES_STRONG = [
+    "FQDYHSFVT",
+    "ISLFNSVSQ",
+]
+RASGRP2_CORES_WEAK = [
+    "VRSEPGGRL",
+    "IEAFDDSGK",
+    "FLMMHPWYI",
+    "LHIYQQSRK",
+    "LVRYWISAF",  #  https://www.cell.com/cell/pdf/S0092-8674(20)31251-4.pdf uses length 10, so adding both 9 mers
+    "VRYWISAFP",
+    "ISAFPAEFD",
+    "IKELKALLD",
+    "LKALLDQEG",
+    "LIDIDSVPT",
+    "IDSVPTYKW",
+    "YHSFVTHGC",
+    "LERFISLFN",
+    "LVITHFVHV",
+    "LLQLQNFNT",
+    "LQNFNTLMA",
+    "IKLWEGLTE",
+    "LVTATGNYG",
+    "LKDLVALQL",
+    "LEEWTSAAK",
+    "ESVFRNFDV",
+    "LSAFGDLDQ",
+    "MGFVHNFQE",
+    "IREEEVQTV"
+]
 
 if len(sys.argv) >= 3 and sys.argv[2] == "DEBUG":
     ALL_CORES = MBP_CORES_STRONG + MBP_CORES_WEAK + \
@@ -102,6 +132,9 @@ elif sys.argv[1] == "MOG":
 elif sys.argv[1] == "PLP1":
     CORE_EPITOPES = PLP1_CORES_STRONG + PLP1_CORES_WEAK
     SCORE_NAME = "PLP1_SCORE"
+elif sys.argv[1] == "RASGRP2":
+    CORE_EPITOPES = RASGRP2_CORES_STRONG + RASGRP2_CORES_WEAK
+    SCORE_NAME = "RASGRP2_SCORE"
 else:
     print("Unknown target protein:", sys.argv[1])
     raise Exception("Unknown target protein: " + sys.argv[1])

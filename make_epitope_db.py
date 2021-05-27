@@ -62,6 +62,8 @@ def set_mimics():
             mimicked = "MOG"
         elif filename.endswith(".plp1"):
             mimicked = "PLP1"
+        elif filename.endswith(".rasgrp2"):
+            mimicked = "RASGRP2"
         else:
             continue
  
