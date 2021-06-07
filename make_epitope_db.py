@@ -130,7 +130,10 @@ def set_status():
         elif actual_proteins < expected_proteins:
             file_status = "missing_proteins"
         elif actual_proteins == expected_proteins:
-            file_status = "valid"
+            if actual_proteins == 0:
+                file_status = "valid_no_file"
+            else:
+                file_status = "valid"
         else:
             file_status = "wtf" # Garbage tools downloaded extra proteins...
 
