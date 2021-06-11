@@ -9,7 +9,7 @@ print("Job Index:", sys.argv[1])
 print("Num Jobs:", sys.argv[2])
 print("NetMHCIIPan Location:", sys.argv[3])
 
-if len(sys.argv) >= 4:
+if len(sys.argv) >= 5:
     print("Temp Dir:", sys.argv[4])
 
 JOB_INDEX = sys.argv[1]
