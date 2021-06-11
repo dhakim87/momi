@@ -16,6 +16,6 @@
 # -t 1-32%16
 
 source activate imsms
-NETMHCPATH = "/home/djhakim/netMHCIIpan/netMHCIIpan-4.0/netMHCIIpan"
-python run_netmhciipan.py ${PBS_ARRAYID} 1000 $NETMHCPATH
-
+NETMHCPATH="/home/djhakim/netMHCIIpan/netMHCIIpan-4.0/netMHCIIpan"
+TMP_OVERRIDE="/panfs/panfs1.ucsd.edu/panscratch/djhakim/netmhcscratch/${PBS_ARRAYID}-"`uuidgen`"/"
+python run_netmhciipan.py ${PBS_ARRAYID} 1000 $NETMHCPATH $TMP_OVERRIDE
