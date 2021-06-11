@@ -9,6 +9,9 @@ print("Job Index:", sys.argv[1])
 print("Num Jobs:", sys.argv[2])
 print("NetMHCIIPan Location:", sys.argv[3])
 
+if len(sys.argv) >= 4:
+    print("Temp Dir:", sys.argv[4])
+
 JOB_INDEX = sys.argv[1]
 NUM_JOBS = sys.argv[2]
 NETMHCIIPAN = sys.argv[3]
@@ -64,7 +67,11 @@ for i in range(int(JOB_INDEX), len(ncbi_ids), int(NUM_JOBS)):
         print("Skipping " + str(ncbi_id) + " Less than 95% of proteins downloaded")
         continue
 
-    cmd = subprocess.run(NETMHCIIPAN + " -filter -a DRB1_1501 -f ./proteomes/" + str(ncbi_id) + ".fasta > ./netmhc/" + str(ncbi_id) + ".mhc 2> ./netmhc/" + str(ncbi_id) + ".err",
+    if len(sys.argv) >= 4:
+        cmd = subprocess.run(NETMHCIIPAN + " -filter -tdir " + sys.argv[4] + " -a DRB1_1501 -f ./proteomes/" + str(ncbi_id) + ".fasta > ./netmhc/" + str(ncbi_id) + ".mhc 2> ./netmhc/" + str(ncbi_id) + ".err",
+                             shell=True)
+    else:
+        cmd = subprocess.run(NETMHCIIPAN + " -filter -a DRB1_1501 -f ./proteomes/" + str(ncbi_id) + ".fasta > ./netmhc/" + str(ncbi_id) + ".mhc 2> ./netmhc/" + str(ncbi_id) + ".err",
                            shell=True)
     cmd = subprocess.run("touch ./netmhc/" + str(ncbi_id) + ".fin", shell=True)
 
