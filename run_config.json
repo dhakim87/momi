@@ -1,0 +1,8 @@
+{
+  "allele": "DRB1_1501",
+  "protein_targets_dir": "./protein_targets",
+  "proteome_search_dir": "./proteomes",
+  "blosum_threshold": 25,
+  "netmhcpath": "/Users/djhakim/netMHCIIpan/netMHCIIpan-4.0/netmhcIIpan",
+  "tmpdir_prefix": "/tmp/"
+}
