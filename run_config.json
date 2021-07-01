@@ -4,5 +4,6 @@
   "proteome_search_dir": "./proteomes",
   "blosum_threshold": 25,
   "netmhcpath": "/Users/djhakim/netMHCIIpan/netMHCIIpan-4.0/netmhcIIpan",
+  "epitope_scanner": "./native_epitope_scan",
   "tmpdir_prefix": "/tmp/"
 }

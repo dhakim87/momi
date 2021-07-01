@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from epitope_scanner import EpitopeScanner, EpitopeScannerCPP
 from netmhciipan_wrapper import NetMHCIIpanRun
+import sys
 
 
 def fasta_scan(dir):
@@ -21,7 +22,7 @@ def fasta_scan(dir):
         if extension not in [".fasta", ".fsa", ".faa", ".fna", ".ffn", ".faa", ".frn", ".fa"]:  #Ugh bioinformatics.
             continue
         paths.append(fpath)
-    return paths
+    return sorted(paths)
 
 
 def build_db():
@@ -55,15 +56,22 @@ def build_target_epitopes(config):
         conn.close()
 
 
-def scan_epitopes(config):
+def scan_epitopes(config, job_index, num_jobs):
     conn = sqlite3.connect("momi.db")
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT mimicked_epitope FROM target_epitopes")
     epitopes = [r[0] for r in cur.fetchall()]
     conn.close()
+
+    f_index = 0
     for fpath in fasta_scan(config["proteome_search_dir"]):
-        # scanner = EpitopeScanner(epitopes, fpath, config["blosum_threshold"])
-        scanner = EpitopeScannerCPP(epitopes, fpath, config["blosum_threshold"], "./a.out")
+        if (f_index % num_jobs) != job_index:
+            continue
+        if "epitope_scanner" in config and config["epitope_scanner"] != "":
+            scanner_path = config['epitope_scanner']
+            scanner = EpitopeScannerCPP(epitopes, fpath, config["blosum_threshold"], scanner_path)
+        else:
+            scanner = EpitopeScanner(epitopes, fpath, config["blosum_threshold"])
         results = scanner.run()
 
         conn = sqlite3.connect("momi.db")
@@ -75,10 +83,17 @@ def scan_epitopes(config):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) >= 3:
+        job_index = int(sys.argv[1])
+        num_jobs = int(sys.argv[2])
+    else:
+        job_index = 0
+        num_jobs = 1
+
     with open("run_config.json") as config_file:
         config = json.load(config_file)
         print(config)
 
     build_db()
     build_target_epitopes(config)
-    scan_epitopes(config)
+    scan_epitopes(config, job_index, num_jobs)
