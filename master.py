@@ -7,6 +7,7 @@ from epitope_scanner import EpitopeScanner, EpitopeScannerCPP
 from netmhciipan_wrapper import NetMHCIIpanRun
 import sys
 
+SQL_TIMEOUT = 300  # 5 minutes, rather than the default 5 seconds.  This should give time to write results from even the largets of fasta files.
 
 def fasta_scan(dir):
     paths = []
@@ -26,7 +27,7 @@ def fasta_scan(dir):
 
 
 def build_db():
-    conn = sqlite3.connect("momi.db")
+    conn = sqlite3.connect("momi.db", timeout=SQL_TIMEOUT)
     cur = conn.cursor()
     cur.execute("CREATE TABLE IF NOT EXISTS target_epitopes (mimicked_file TEXT, mimicked_protein TEXT, mimicked_epitope TEXT, affinity TEXT)")
     cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS target_epitopes_ind ON target_epitopes(mimicked_file, mimicked_protein, mimicked_epitope, affinity)")
@@ -46,7 +47,7 @@ def build_target_epitopes(config):
 
         target_protein = os.path.basename(fpath)
         results = runner.run()
-        conn = sqlite3.connect("momi.db")
+        conn = sqlite3.connect("momi.db", timeout=SQL_TIMEOUT)
         cur = conn.cursor()
         for protein in results:
             for core in results[protein]:
@@ -57,7 +58,7 @@ def build_target_epitopes(config):
 
 
 def scan_epitopes(config, job_index, num_jobs):
-    conn = sqlite3.connect("momi.db")
+    conn = sqlite3.connect("momi.db", timeout=SQL_TIMEOUT)
     cur = conn.cursor()
     cur.execute("SELECT DISTINCT mimicked_epitope FROM target_epitopes")
     epitopes = [r[0] for r in cur.fetchall()]
@@ -76,7 +77,7 @@ def scan_epitopes(config, job_index, num_jobs):
             scanner = EpitopeScanner(epitopes, fpath, config["blosum_threshold"])
         results = scanner.run()
 
-        conn = sqlite3.connect("momi.db")
+        conn = sqlite3.connect("momi.db", timeout=SQL_TIMEOUT)
         cur = conn.cursor()
         for result in results:
             cur.execute("INSERT OR IGNORE INTO mimic (file, protein, offset, mimicked_epitope, flanking, epitope, blosum) VALUES(?,?,?,?,?,?,?)", result)
