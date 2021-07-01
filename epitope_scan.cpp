@@ -8,7 +8,6 @@ const int FLANKING = 6;
 const int EPITOPE_LEN = 9;
 const int MAX_PROTEIN_NAME_LEN = 2048;
 const int NUM_AMINO = 21;
-const int BLOSUM_THRESH = 25;
 
 const int BLOSUM62X[] = 
 {
@@ -42,12 +41,12 @@ const int aa_map[26]= {
 static inline int map_aa(char aa){
 	int i = aa-'A';
 	if (i < 0 || i > 26){
-		printf("UNKNOWN AMINO: %d\n", aa);
+		fprintf(stderr, "UNKNOWN AMINO: %d\n", aa);
 		throw std::invalid_argument( "Unknown amino acid" );
 	}
 	int result = aa_map[i];
 	if (result == -10000){
-		printf("UNKNOWN AMINO: %c\n", aa);
+		fprintf(stderr, "UNKNOWN AMINO: %c\n", aa);
 		throw std::invalid_argument( "Unknown amino acid" );
 	}
 
@@ -78,22 +77,22 @@ class CircBuf
 		void debug_print_buf()
 		{
 			for (int i = 0; i < len; i++)
-				printf("%c", arr[i]);
-			printf("\n");
+				fprintf(stderr, "%c", arr[i]);
+			fprintf(stderr, "\n");
 		}
 
 		void debug_print_window()
 		{
-			printf("\"");
+			fprintf(stderr, "\"");
 			//Start: index, End: index - 1
 			if (index != len)
 			{
 				for (int i = index; i < bufsize; i++)
-					printf("%c", arr[i]);
+					fprintf(stderr, "%c", arr[i]);
 			}
 			for (int i = 0; i < index; i++)
-				printf("%c", arr[i]);
-			printf("\"\n");
+				fprintf(stderr, "%c", arr[i]);
+			fprintf(stderr, "\"\n");
 		}
 
 		void copy_window(char* buffer, int offset = 0, int len = -1)
@@ -173,7 +172,7 @@ int blosum(CircBuf* cb, char* epitope, int start_index, int epitope_len)
 	return sum;
 }
 
-void blosum_scan(CircBuf* cb, char** epitopes, int num_epitopes)
+void blosum_scan(CircBuf* cb, int protein_offset, char** epitopes, int num_epitopes, int blosum_thresh)
 {
 	char flanking_window[EPITOPE_LEN + 2 * FLANKING + 1];
 	char window[EPITOPE_LEN + 1];
@@ -182,18 +181,17 @@ void blosum_scan(CircBuf* cb, char** epitopes, int num_epitopes)
 	for (int i = 0; i < num_epitopes; i++)
 	{
 		int blosum_score = blosum(cb, epitopes[i], FLANKING, EPITOPE_LEN);
-		if (blosum_score > BLOSUM_THRESH)
+		if (blosum_score >= blosum_thresh)
 		{
 			cb->copy_window(flanking_window);
 			cb->copy_window(window, FLANKING, EPITOPE_LEN);
-			//new uuid, file_name, protein_name, flanking_window, mimic, mimicked_epitope, blosum_score
-			printf("%s, %s, %s, %s, %s, %s, %d\n",
-				"needUUID",
-				"needfName",
+			//protein_name, protein_offset, mimicked_epitope, flanking_window, mimic, blosum_score
+			printf("%s, %d, %s, %s, %s, %d\n",
 				protein_name,
+				protein_offset, 
+				epitopes[i],
 				flanking_window,
 				window,
-				epitopes[i],
 				blosum_score
 			);
 		}
@@ -203,16 +201,19 @@ void blosum_scan(CircBuf* cb, char** epitopes, int num_epitopes)
 int main(int argc, const char** argv)
 {
 	const char* exe_name = argv[0];
-	int num_epitopes = argc-1;
+	int num_epitopes = argc-2;
 	char** epitopes = new char*[num_epitopes];
 
-	for (int i = 1; i < argc; i++)
+    int blosum_thresh = atoi(argv[1]);
+    if (blosum_thresh <= 0)
+        fprintf(stderr, "Blosum Threshold must be > 0.  (A good threshold is 25).  Try <prog_name> 25 <epitope1> <epitope2> <epitope3>...");
+	for (int i = 2; i < argc; i++)
 	{
 		int epi_len = strlen(argv[i]);
 		if (epi_len != EPITOPE_LEN)
 			throw std::invalid_argument( "Bad Epitope Length" );
-		epitopes[i-1] = (char*)malloc(epi_len + 1);
-		strcpy(epitopes[i-1], argv[i]);
+		epitopes[i-2] = (char*)malloc(epi_len + 1);
+		strcpy(epitopes[i-2], argv[i]);
 	}
 
 	CircBuf flanking_window(EPITOPE_LEN + 2 * FLANKING);
@@ -224,15 +225,23 @@ int main(int argc, const char** argv)
 	int name_index = 0;
 	int c;
 	int num_proteins = 0;
+	int protein_offset = 0;
 	while ((c = getc(stdin)) != EOF)
 	{
 		if (state == PARSE_PROTEIN)
 		{
 			if (c == '>')
 			{
+				for (int i=0; i < FLANKING; i++)
+				{
+					flanking_window.addc('$');
+					if (flanking_window.is_full())
+						blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh);
+				}
+
 			    num_proteins++;
-			    if (num_proteins % 1000 == 0)
-			        fprintf(stderr, "%d\n", num_proteins);
+			    // if (num_proteins % 1000 == 0)
+			    //     fprintf(stderr, "%d\n", num_proteins);
 				state = PARSE_PROTEIN_HEADER;
 				name_index = 0;
 				continue;
@@ -246,7 +255,7 @@ int main(int argc, const char** argv)
 				flanking_window.addc(c);
 				if (flanking_window.is_full())
 				{
-					blosum_scan(&flanking_window, epitopes, num_epitopes);
+					blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh);
 				}
 				continue;
 			}
@@ -255,15 +264,10 @@ int main(int argc, const char** argv)
 		{
 			if (c == '\n')
 			{
-				for (int i=0; i < FLANKING; i++)
-				{
-					flanking_window.addc('$');
-					if (flanking_window.is_full())
-						blosum_scan(&flanking_window, epitopes, num_epitopes);
-				}
 				protein_name[name_index] = '\0';
 				state = PARSE_PROTEIN;
 				flanking_window.clear();
+				protein_offset = 0;
 				for (int i=0; i < FLANKING; i++)
 					flanking_window.addc('^');
 				continue;
@@ -274,6 +278,13 @@ int main(int argc, const char** argv)
 				protein_name[name_index++] = c;
 			continue;
 		}
+	}
+
+	for (int i=0; i < FLANKING; i++)
+	{
+		flanking_window.addc('$');
+		if (flanking_window.is_full())
+			blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh);
 	}
 
 	return 0;

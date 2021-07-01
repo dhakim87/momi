@@ -1,6 +1,7 @@
 import os
 import sys
 from uuid import uuid4
+import subprocess
 
 
 def readBlosum62():
@@ -52,7 +53,7 @@ class EpitopeScanner:
 
     def _scan(self, protein_name, protein_sequence, out_arr):
         protein_sequence = ("^"*self.flanking) + protein_sequence + ("$"*self.flanking)
-        for window_start in range(self.flanking, len(protein_sequence) - self.flanking - self.epitope_len):
+        for window_start in range(self.flanking, len(protein_sequence) - self.flanking - self.epitope_len + 1):
             window_end = window_start + self.epitope_len
             window = protein_sequence[window_start: window_end]
 
@@ -70,7 +71,7 @@ class EpitopeScanner:
             for mimicked_epitope in blosum_hits:
                 score = blosum_hits[mimicked_epitope]
                 out_arr.append(
-                    [str(uuid4()), self.fname, protein_name, flanked_window, window, mimicked_epitope, score]
+                    [self.fname, protein_name, window_start - self.flanking, mimicked_epitope, flanked_window, window, score]
                 )
 
     def run(self):
@@ -91,4 +92,36 @@ class EpitopeScanner:
             if protein_name != "":
                 self._scan(protein_name, "".join(active), out_arr)
 
+        return out_arr
+
+
+class EpitopeScannerCPP:
+    def __init__(self, epitopes, fpath, blosum_thresh, scanner_executable):
+        self.epitopes = epitopes
+        self.scanner_executable = scanner_executable
+        self.fpath = fpath
+        self.fname = os.path.basename(self.fpath)
+        self.thresh = blosum_thresh
+        self.flanking = 6
+        self.epitope_len = len(self.epitopes[0])
+
+    # def _scan(self, protein_name, protein_sequence, out_arr):
+    #     out_arr.append(
+    #         [self.fname, protein_name, window_start - self.flanking, mimicked_epitope, flanked_window, window, score]
+    #     )
+
+    def run(self):
+        subproc = subprocess.run("cat " + self.fpath + " | " + self.scanner_executable + " " + str(self.thresh) + " " + " ".join(self.epitopes), capture_output=True, shell=True)
+        if len(subproc.stderr) != 0:
+            raise Exception("Processing Error: " + subproc.stderr.decode("utf-8"))
+
+        out_arr = []
+        for line in subproc.stdout.decode("utf-8").splitlines():
+            ll = line.split(",")
+            ll = [x.strip() for x in ll]
+            if len(ll) != 6:
+                raise Exception("Processing Error, Unexpected Output Format: ", ll)
+            out_arr.append(
+                [self.fname] + ll
+            )
         return out_arr
