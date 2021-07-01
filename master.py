@@ -67,6 +67,7 @@ def scan_epitopes(config, job_index, num_jobs):
     for fpath in fasta_scan(config["proteome_search_dir"]):
         if (f_index % num_jobs) != job_index:
             continue
+        print(fpath)
         if "epitope_scanner" in config and config["epitope_scanner"] != "":
             scanner_path = config['epitope_scanner']
             scanner = EpitopeScannerCPP(epitopes, fpath, config["blosum_threshold"], scanner_path)
@@ -96,4 +97,6 @@ if __name__ == "__main__":
 
     build_db()
     build_target_epitopes(config)
+    print("Job Index: " + str(job_index))
+    print("Num Jobs: " + str(num_jobs))
     scan_epitopes(config, job_index, num_jobs)
