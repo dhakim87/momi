@@ -118,9 +118,16 @@ class EpitopeScannerCPP:
         out_arr = []
         for line in subproc.stdout.decode("utf-8").splitlines():
             ll = line.split(",")
-            ll = [x.strip() for x in ll]
-            if len(ll) != 6:
+            if len(ll) < 6:
                 raise Exception("Processing Error, Unexpected Output Format: ", ll)
+
+            #  Argh, stupid fasta file protein names can contain commas.
+            #  But none of the other fields can, so we can reconstruct.
+            while len(ll) > 6:
+                ll[0] = ll[0] + "," + ll[1]
+                del ll[1]
+
+            ll = [x.strip() for x in ll]
             out_arr.append(
                 [self.fname] + ll
             )
