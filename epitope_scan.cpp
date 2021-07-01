@@ -34,7 +34,16 @@ const int BLOSUM62X[] =
 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 const int aa_map[26]= {
-	0,-10000,1,2,3,4,5,6,7,-10000,8,9,10,11,-10000,12,13,14,15,16,-10000,17,18,20,19,-10000
+//Maps ABCDEFGHIJKLMNOPQRSTUVWXYZ to indexes into table above
+// Rare cases:
+//	O 	Pyl 	Pyrrolysine	- Rare amino acid, treated as X
+//	U 	Sec 	Selenocysteine - Rare amino acid, treated as X
+//	B 	Asx 	Asparagine or Aspartic acid, treated as X
+//	J 	Xle 	Leucine or Isoleucine, treated as X
+//	Z 	Glx 	Glutamine or Glutamic acid, treated as X
+//	X 	Xaa 	Any amino acid
+//X - Any amino acid, blosum score -1 with everything
+	0,20,1,2,3,4,5,6,7,20,8,9,10,11,20,12,13,14,15,16,20,17,18,20,19,20
 };
 
 //Ugh, maybe should just use asserts....
