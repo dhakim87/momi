@@ -63,8 +63,9 @@ def scan_epitopes(config, job_index, num_jobs):
     epitopes = [r[0] for r in cur.fetchall()]
     conn.close()
 
-    f_index = 0
+    f_index = -1
     for fpath in fasta_scan(config["proteome_search_dir"]):
+        f_index += 1
         if (f_index % num_jobs) != job_index:
             continue
         print(fpath)
