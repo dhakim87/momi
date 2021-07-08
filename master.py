@@ -38,23 +38,41 @@ def build_db():
 
 
 def build_target_epitopes(config):
-    for fpath in fasta_scan(config["protein_targets_dir"]):
-        runner = NetMHCIIpanRun(
-            config["netmhcpath"],
-            config["allele"],
-            config["tmpdir_prefix"],
-            fpath)
+    if "epitope_override" in config \
+            and len(config["epitope_override"]) > 0 \
+            and "protein_targets_dir" in config \
+            and len(config["protein_targets_dir"]) > 0:
+        raise Exception("Cannot specify epitope_override and protein_targets_dir simultaneously")
 
-        target_protein = os.path.basename(fpath)
-        results = runner.run()
+    if "epitope_override" in config and len(config["epitope_override"]) > 0:
         conn = sqlite3.connect("momi.db", timeout=SQL_TIMEOUT)
         cur = conn.cursor()
-        for protein in results:
-            for core in results[protein]:
-                cur.execute("INSERT OR IGNORE INTO target_epitopes (mimicked_file, mimicked_protein, mimicked_epitope, affinity) VALUES(?, ?, ?, ?)",
-                            (target_protein, protein, core, results[protein][core]))
+        results = [
+            ("config", "unspecified", ep, "unspecified") for ep in config["epitope_override"]
+        ]
+        for r in results:
+            cur.execute("INSERT OR IGNORE INTO target_epitopes (mimicked_file, mimicked_protein, mimicked_epitope, affinity) VALUES(?, ?, ?, ?)",
+                        r)
         conn.commit()
         conn.close()
+    else:
+        for fpath in fasta_scan(config["protein_targets_dir"]):
+            runner = NetMHCIIpanRun(
+                config["netmhcpath"],
+                config["allele"],
+                config["tmpdir_prefix"],
+                fpath)
+
+            target_protein = os.path.basename(fpath)
+            results = runner.run()
+            conn = sqlite3.connect("momi.db", timeout=SQL_TIMEOUT)
+            cur = conn.cursor()
+            for protein in results:
+                for core in results[protein]:
+                    cur.execute("INSERT OR IGNORE INTO target_epitopes (mimicked_file, mimicked_protein, mimicked_epitope, affinity) VALUES(?, ?, ?, ?)",
+                                (target_protein, protein, core, results[protein][core]))
+            conn.commit()
+            conn.close()
 
 
 def scan_epitopes(config, job_index, num_jobs):
