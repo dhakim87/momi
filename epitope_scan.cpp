@@ -5,7 +5,6 @@
 
 //MVAFKGVWT ISIAKSVFY VFYIAAQCL ILYLVTPPS VTMVHGNLT FTIFASCDS IALAIGFSV AINYTGASM MGNWENHWI WIYWVGPII FKEAFSKAA VVHVIDVDR VHVIDVDRG LIRLFSRDA LDVMASQKR IGRFFGGDR TAHYGSLPQ VHFFKNIVT FKNIVTPRT IFKLGGRDS IETYFSKNY INVIHAFQY YVIYGTASF FFLYGALLL LLLAEGFYT FGDYKTTIC VYIYFNTWT YIYFNTWTT VLPWNAFPG WNAFPGKVC FHLFIAAFV IAAFVGAAA IAATYNFAV IRALVGDEV VGWYRPPFS VHLYRNGKD IVPVLGPLV
 const int FLANKING = 6;
-const int EPITOPE_LEN = 9;
 const int MAX_PROTEIN_NAME_LEN = 2048;
 const int NUM_AMINO = 21;
 
@@ -181,19 +180,18 @@ int blosum(CircBuf* cb, char* epitope, int start_index, int epitope_len)
 	return sum;
 }
 
-void blosum_scan(CircBuf* cb, int protein_offset, char** epitopes, int num_epitopes, int blosum_thresh)
+void blosum_scan(CircBuf* cb, int protein_offset, char** epitopes, int num_epitopes, int blosum_thresh, int epitope_len)
 {
-	char flanking_window[EPITOPE_LEN + 2 * FLANKING + 1];
-	char window[EPITOPE_LEN + 1];
-
+	char* flanking_window = (char*)malloc(epitope_len + 2 * FLANKING + 1);
+	char* window = (char*)malloc(epitope_len + 1);
 
 	for (int i = 0; i < num_epitopes; i++)
 	{
-		int blosum_score = blosum(cb, epitopes[i], FLANKING, EPITOPE_LEN);
+		int blosum_score = blosum(cb, epitopes[i], FLANKING, epitope_len);
 		if (blosum_score >= blosum_thresh)
 		{
 			cb->copy_window(flanking_window);
-			cb->copy_window(window, FLANKING, EPITOPE_LEN);
+			cb->copy_window(window, FLANKING, epitope_len);
 			//protein_name, protein_offset, mimicked_epitope, flanking_window, mimic, blosum_score
 			printf("%s, %d, %s, %s, %s, %d\n",
 				protein_name,
@@ -205,6 +203,9 @@ void blosum_scan(CircBuf* cb, int protein_offset, char** epitopes, int num_epito
 			);
 		}
 	}
+
+	free(window);
+	free(flanking_window);
 }
 
 int main(int argc, const char** argv)
@@ -216,16 +217,18 @@ int main(int argc, const char** argv)
     int blosum_thresh = atoi(argv[1]);
     if (blosum_thresh <= 0)
         fprintf(stderr, "Blosum Threshold must be > 0.  (A good threshold is 25).  Try <prog_name> 25 <epitope1> <epitope2> <epitope3>...");
+
+    int epitope_len = strlen(argv[2]);
 	for (int i = 2; i < argc; i++)
 	{
 		int epi_len = strlen(argv[i]);
-		if (epi_len != EPITOPE_LEN)
+		if (epi_len != epitope_len)
 			throw std::invalid_argument( "Bad Epitope Length" );
 		epitopes[i-2] = (char*)malloc(epi_len + 1);
 		strcpy(epitopes[i-2], argv[i]);
 	}
 
-	CircBuf flanking_window(EPITOPE_LEN + 2 * FLANKING);
+	CircBuf flanking_window(epitope_len + 2 * FLANKING);
 
 	const char PARSE_PROTEIN_HEADER = 0;
 	const char PARSE_PROTEIN = 1;
@@ -245,7 +248,7 @@ int main(int argc, const char** argv)
 				{
 					flanking_window.addc('$');
 					if (flanking_window.is_full())
-						blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh);
+						blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh, epitope_len);
 				}
 
 			    num_proteins++;
@@ -264,7 +267,7 @@ int main(int argc, const char** argv)
 				flanking_window.addc(c);
 				if (flanking_window.is_full())
 				{
-					blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh);
+					blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh, epitope_len);
 				}
 				continue;
 			}
@@ -293,7 +296,7 @@ int main(int argc, const char** argv)
 	{
 		flanking_window.addc('$');
 		if (flanking_window.is_full())
-			blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh);
+			blosum_scan(&flanking_window, protein_offset++, epitopes, num_epitopes, blosum_thresh, epitope_len);
 	}
 
 	return 0;
