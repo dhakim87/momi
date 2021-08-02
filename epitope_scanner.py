@@ -3,6 +3,8 @@ import sys
 from uuid import uuid4
 import subprocess
 
+from file_util import open_fasta
+
 
 def readBlosum62():
     dict = {}
@@ -79,7 +81,7 @@ class EpitopeScanner:
         active = []
         protein_name = ""
         i = 0
-        with open(self.fpath) as fasta:
+        with open_fasta(self.fpath) as fasta:
             for line in fasta:
                 if line.startswith(">"):
                     i += 1
