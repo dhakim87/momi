@@ -113,7 +113,11 @@ class EpitopeScannerCPP:
     #     )
 
     def run(self):
-        subproc = subprocess.run("cat " + self.fpath + " | " + self.scanner_executable + " " + str(self.thresh) + " " + " ".join(self.epitopes), capture_output=True, shell=True)
+        if self.fpath.endswith(".gz"):
+            subproc = subprocess.run("zcat < " + self.fpath + " | " + self.scanner_executable + " " + str(self.thresh) + " " + " ".join(self.epitopes), capture_output=True, shell=True)
+        else:
+            subproc = subprocess.run("cat " + self.fpath + " | " + self.scanner_executable + " " + str(self.thresh) + " " + " ".join(self.epitopes), capture_output=True, shell=True)
+
         if len(subproc.stderr) != 0:
             raise Exception("Processing Error: " + subproc.stderr.decode("utf-8"))
 
