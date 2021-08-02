@@ -7,23 +7,11 @@ from epitope_scanner import EpitopeScanner, EpitopeScannerCPP
 from netmhciipan_wrapper import NetMHCIIpanRun
 import sys
 
-SQL_TIMEOUT = 300  # 5 minutes, rather than the default 5 seconds.  This should give time to write results from even the largets of fasta files.
+from file_util import fasta_scan, fasta_glob
 
-def fasta_scan(dir):
-    paths = []
-    for target_protein_file in os.listdir(dir):
-        fname = target_protein_file
-        fpath = os.path.join(dir, target_protein_file)
-        if not os.path.isfile(fpath):
-            continue
-        tup = os.path.splitext(fname)
-        if len(tup) < 2:
-            continue
-        target_protein, extension = tup
-        if extension not in [".fasta", ".fsa", ".faa", ".fna", ".ffn", ".faa", ".frn", ".fa"]:  #Ugh bioinformatics.
-            continue
-        paths.append(fpath)
-    return sorted(paths)
+# 5 minutes, rather than the default 5 seconds.
+# This should give time to write results from even the largest of fasta files.
+SQL_TIMEOUT = 300
 
 
 def build_db():
@@ -83,7 +71,7 @@ def scan_epitopes(config, job_index, num_jobs):
     conn.close()
 
     f_index = -1
-    for fpath in fasta_scan(config["proteome_search_dir"]):
+    for fpath in fasta_glob(config["proteome_search_glob"]):
         f_index += 1
         if (f_index % num_jobs) != job_index:
             continue

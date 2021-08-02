@@ -1,7 +1,8 @@
 {
   "allele": "DRB1_1501",
+  "COMMENTepitope_override": ["SXXEXXXXTFLXKFNXEXEXLXYQXSL"],
   "protein_targets_dir": "./protein_targets",
-  "proteome_search_dir": "./proteomes",
+  "proteome_search_glob": "./proteomes/*",
   "blosum_threshold": 25,
   "netmhcpath": "/Users/djhakim/netMHCIIpan/netMHCIIpan-4.0/netmhcIIpan",
   "epitope_scanner": "./native_epitope_scan",
